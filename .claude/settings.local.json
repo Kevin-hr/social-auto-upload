@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ffmpeg:*)",
+      "Bash(dir:*)",
+      "Bash(python:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(gh pr view:*)",
+      "Bash(winget install:*)"
+    ]
+  }
+}

@@ -1,101 +1,119 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with this repository.
+
 ## Project Overview
 
-This project, `social-auto-upload`, is a powerful automation tool designed to help content creators and operators efficiently publish video content to multiple domestic and international mainstream social media platforms in one click. The project implements video upload, scheduled release and other functions for platforms such as `Douyin`, `Bilibili`, `Xiaohongshu`, `Kuaishou`, `WeChat Channel`, `Baijiahao` and `TikTok`.
+`social-auto-upload` is an automation tool for publishing videos to multiple social media platforms (Douyin, Bilibili, Xiaohongshu, Kuaishou, WeChat Channel, Baijiahao, TikTok).
 
-The project consists of a Python backend and a Vue.js frontend.
+**Tech Stack:**
+- **Backend**: Flask (port 5409)
+- **Frontend**: Vue 3 + Vite + Element Plus + Pinia + Vue Router
+- **Browser Automation**: Playwright
+- **Database**: SQLite (`db/database.db`)
 
-**Backend:**
-
-*   Framework: Flask
-*   Core Functionality:
-    *   Handles file uploads and management.
-    *   Interacts with a SQLite database to store information about files and user accounts.
-    *   Uses `playwright` for browser automation to interact with social media platforms.
-    *   Provides a RESTful API for the frontend to consume.
-    *   Uses Server-Sent Events (SSE) for real-time communication with the frontend during the login process.
-
-**Frontend:**
-
-*   Framework: Vue.js
-*   Build Tool: Vite
-*   UI Library: Element Plus
-*   State Management: Pinia
-*   Routing: Vue Router
-*   Core Functionality:
-    *   Provides a web interface for managing social media accounts, video files, and publishing videos.
-    *   Communicates with the backend via a RESTful API.
-
-**Command-line Interface:**
-
-The project also provides a command-line interface (CLI) for users who prefer to work from the terminal. The CLI supports two main actions:
-
-*   `login`: To log in to a social media platform.
-*   `upload`: To upload a video to a social media platform, with an option to schedule the upload.
-
-## Building and Running
+## Commands
 
 ### Backend
+```bash
+# Install dependencies
+pip install -r requirements.txt
 
-1.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+# Install browser drivers
+playwright install chromium
 
-2.  **Install Playwright browser drivers:**
-    ```bash
-    playwright install chromium
-    ```
+# Initialize database
+python db/createTable.py
 
-3.  **Initialize the database:**
-    ```bash
-    python db/createTable.py
-    ```
-
-4.  **Run the backend server:**
-    ```bash
-    python sau_backend.py
-    ```
-    The backend server will start on `http://localhost:5409`.
+# Run server
+python sau_backend.py
+```
 
 ### Frontend
-
-1.  **Navigate to the frontend directory:**
-    ```bash
-    cd sau_frontend
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
-    The frontend development server will start on `http://localhost:5173`.
-
-### Command-line Interface
-
-To use the CLI, you can run the `cli_main.py` script with the appropriate arguments.
-
-**Login:**
-
 ```bash
+cd sau_frontend
+npm install
+npm run dev     # dev server on port 5173
+npm run build   # production build
+```
+
+### CLI
+```bash
+# Login
 python cli_main.py <platform> <account_name> login
+
+# Upload (immediate)
+python cli_main.py <platform> <account_name> upload <video_file>
+
+# Upload (scheduled)
+python cli_main.py <platform> <account_name> upload <video_file> -pt 1 -t "YYYY-MM-DD HH:MM"
 ```
 
-**Upload:**
+## Architecture
 
-```bash
-python cli_main.py <platform> <account_name> upload <video_file> [-pt {0,1}] [-t YYYY-MM-DD HH:MM]
-```
+### Directory Structure
+- `sau_backend.py` - Flask API entry point
+- `cli_main.py` - CLI entry point
+- `db/` - SQLite database and schema
+- `sau_frontend/` - Vue.js frontend
+- `uploader/<platform>_uploader/` - Platform-specific upload modules
+- `myUtils/` - Core utilities (auth, login, postVideo)
+- `utils/` - Shared utilities (logging, constants, file helpers)
+- `examples/` - Example scripts for each platform
 
-## Development Conventions
+### Database Schema
+- `user_info`: Accounts (id, type, filePath, userName, status)
+- `file_records`: Uploaded files (id, filename, filesize, upload_time, file_path)
 
-*   The backend code is located in the root directory and the `myUtils` and `uploader` directories.
-*   The frontend code is located in the `sau_frontend` directory.
-*   The project uses a SQLite database for data storage. The database file is located at `db/database.db`.
-*   The `conf.example.py` file should be copied to `conf.py` and configured with the appropriate settings.
-*   The `requirements.txt` file lists the Python dependencies.
-*   The `package.json` file in the `sau_frontend` directory lists the frontend dependencies.
+**Platform Type Mapping:**
+- `1` = Xiaohongshu
+- `2` = WeChat Channel/Tencent
+- `3` = Douyin
+- `4` = Kuaishou
+
+### API Endpoints
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/upload` | POST | Quick file upload |
+| `/uploadSave` | POST | Upload and save to DB |
+| `/getFiles` | GET | List all files |
+| `/deleteFile` | GET | Delete file by ID |
+| `/getAccounts` | GET | List all accounts |
+| `/getValidAccounts` | GET | List accounts with cookie validation |
+| `/deleteAccount` | GET | Delete account by ID |
+| `/updateUserinfo` | POST | Update account info |
+| `/uploadCookie` | POST | Upload cookie JSON file |
+| `/downloadCookie` | GET | Download cookie file |
+| `/login` | GET | SSE login (type, id params) |
+| `/postVideo` | POST | Trigger video upload |
+
+### Storage
+- **Cookies**: `cookiesFile/` - JSON files per account
+- **Videos**: `videoFile/` - Uploaded video files
+- **Browser State**: Playwright storage state files
+
+## Adding a New Platform
+
+1. **Create uploader module**: `uploader/<platform>_uploader/main.py`
+   - Implement `<Platform>Video` class with `upload()` method
+   - Implement `xxx_setup()` for login/cookie generation
+
+2. **Update backend**: `sau_backend.py`
+   - Add route handler in `run_async_function()`
+   - Add video posting logic in `/postVideo` and `/postVideoBatch`
+
+3. **Update utils**: `utils/base_social_media.py`
+   - Add `SOCIAL_MEDIA_<PLATFORM>` constant
+   - Update `get_supported_social_media()`
+
+4. **Update CLI**: `cli_main.py`
+   - Import and wire up new uploader
+
+5. **Database**: Add account via frontend or direct SQL
+
+## Configuration
+
+Copy `conf.example.py` to `conf.py`:
+- `LOCAL_CHROME_PATH` - Chrome executable path
+- `LOCAL_CHROME_HEADLESS` - Run browser headless
+- `XHS_SERVER` - Xiaohongshu API server

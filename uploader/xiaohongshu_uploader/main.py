@@ -175,11 +175,24 @@ class XiaoHongShuVideo(object):
             await page.keyboard.press("Delete")
             await page.keyboard.type(self.title)
             await page.keyboard.press("Enter")
-        css_selector = ".ql-editor" # 不能加上 .ql-blank 属性，这样只能获取第一次非空状态
-        for index, tag in enumerate(self.tags, start=1):
-            await page.type(css_selector, "#" + tag)
-            await page.press(css_selector, "Space")
-        xiaohongshu_logger.info(f'总共添加{len(self.tags)}个话题')
+        try:
+            # 2024.02.04 Update: Try multiple selectors for description box
+            description_selectors = [".ql-editor", "#post-textarea", "div[contenteditable='true']"]
+            editor = None
+            for selector in description_selectors:
+                if await page.locator(selector).count():
+                    editor = selector
+                    break
+            
+            if editor:
+                for index, tag in enumerate(self.tags, start=1):
+                    await page.type(editor, "#" + tag)
+                    await page.press(editor, "Space")
+                xiaohongshu_logger.info(f'总共添加{len(self.tags)}个话题')
+            else:
+                xiaohongshu_logger.warning("[-] 无法找到正文/话题输入框，跳过标签填写")
+        except Exception as e:
+            xiaohongshu_logger.error(f"[-] 填写话题时发生错误 (非致命): {e}")
 
         # while True:
         #     # 判断重新上传按钮是否存在，如果不存在，代表视频正在上传，则等待
