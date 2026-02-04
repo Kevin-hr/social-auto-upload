@@ -4,31 +4,14 @@ WORKDIR /app
 
 RUN npm config set registry https://registry.npmmirror.com
 
-COPY sau_frontend .
+COPY frontend .
 
 RUN npm install
 
 ENV NODE_ENV=production
 ENV PATH=/app/node_modules/.bin:$PATH
 
-# 动态设置 API 地址 - 支持环境变量
-ENV VITE_API_BASE_URL=${API_URL:-""}
-
-# 构建前端时替换 API 地址（多个文件）
-RUN if [ -n "$VITE_API_BASE_URL" ]; then \
-      sed -i "s#import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'#'${VITE_API_BASE_URL}'#g" /app/src/utils/request.js; \
-      sed -i "s#\${import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'}#${VITE_API_BASE_URL}#g" /app/src/api/material.js; \
-      sed -i "s#'http://localhost:5409'##g" /app/.env.production; \
-    else \
-      # Keep the default or use relative path. Fixing the syntax error 'baseURL: ,' by not deleting the code.
-      # We will just do nothing, or set it to '/' to avoid the syntax error.
-      sed -i "s#import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'#'/'#g" /app/src/utils/request.js; \
-      # Same for material.js if needed or just skip.
-      # sed -i "s#\${import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'}##g" /app/src/api/material.js; \
-    fi
-
 RUN npm run build
-
 
 FROM python:3.10.19
 
@@ -60,9 +43,11 @@ RUN playwright install chromium-headless-shell
 
 COPY . .
 
-COPY --from=builder /app/dist/index.html /app
-COPY --from=builder /app/dist/assets /app/assets
-COPY --from=builder /app/dist/vite.svg /app/assets
+# Next.js static export output (usually 'out' if configured, or .next/static if not)
+# Assuming Next.js static export is configured or we are using 'next start' separately?
+# Wait, standard Next.js build produces .next folder which needs 'next start'.
+# To serve via Flask, we need 'output: export' in next.config.ts to get static HTML/CSS/JS.
+COPY --from=builder /app/out /app/static_frontend
 
 RUN cp conf.example.py conf.py
 

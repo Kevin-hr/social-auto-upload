@@ -11,8 +11,8 @@ from flask_cors import CORS
 from myUtils.auth import check_cookie
 from flask import Flask, request, jsonify, Response, render_template, send_from_directory
 from conf import BASE_DIR
-from myUtils.login import get_tencent_cookie, douyin_cookie_gen, get_ks_cookie, xiaohongshu_cookie_gen
-from myUtils.postVideo import post_video_tencent, post_video_DouYin, post_video_ks, post_video_xhs
+from myUtils.login import get_tencent_cookie, douyin_cookie_gen, get_ks_cookie, xiaohongshu_cookie_gen, bilibili_cookie_gen, baijiahao_cookie_gen
+from myUtils.postVideo import post_video_tencent, post_video_DouYin, post_video_ks, post_video_xhs, post_video_bilibili, post_video_baijiahao
 
 active_queues = {}
 app = Flask(__name__)
@@ -62,24 +62,25 @@ init_db()
 # 获取当前目录（假设 index.html 和 assets 在这里）
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-# 处理所有静态资源请求（未来打包用）
-@app.route('/assets/<filename>')
-def custom_static(filename):
-    return send_from_directory(os.path.join(current_dir, 'assets'), filename)
+# 获取静态文件目录 (Next.js export)
+static_folder = os.path.join(current_dir, 'static_frontend')
 
-# 处理 favicon.ico 静态资源（未来打包用）
+# 处理所有静态资源请求
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(os.path.join(static_folder, path)):
+        return send_from_directory(static_folder, path)
+    else:
+        return send_from_directory(static_folder, 'index.html')
+
+# 保留原有的 favicon 处理（如果 Next.js 有自己的 favicon，这部分可能需要调整，这里先保留兼容）
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(current_dir, 'assets'), 'vite.svg')
-
-@app.route('/vite.svg')
-def vite_svg():
-    return send_from_directory(os.path.join(current_dir, 'assets'), 'vite.svg')
-
-# （未来打包用）
-@app.route('/')
-def index():  # put application's code here
-    return send_from_directory(current_dir, 'index.html')
+    # 尝试从 static_frontend 获取，如果没有则回退到旧逻辑（虽然旧逻辑 assets 已经没了）
+    if os.path.exists(os.path.join(static_folder, 'favicon.ico')):
+         return send_from_directory(static_folder, 'favicon.ico')
+    return send_from_directory(os.path.join(current_dir, 'assets'), 'vite.svg') # Fallback，可能失效
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -472,6 +473,9 @@ def login():
     type = request.args.get('type')
     # 账号名
     id = request.args.get('id')
+    # 账号/密码 (可选)
+    username = request.args.get('username')
+    password = request.args.get('password')
 
     # 模拟一个用于异步通信的队列
     status_queue = Queue()
@@ -481,7 +485,7 @@ def login():
         print(f"清理队列: {id}")
         del active_queues[id]
     # 启动异步任务线程
-    thread = threading.Thread(target=run_async_function, args=(type,id,status_queue), daemon=True)
+    thread = threading.Thread(target=run_async_function, args=(type,id,status_queue,username,password), daemon=True)
     thread.start()
     response = Response(sse_stream(status_queue,), mimetype='text/event-stream')
     response.headers['Cache-Control'] = 'no-cache'
@@ -529,6 +533,12 @@ def postVideo():
         case 4:
             post_video_ks(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
                       start_days)
+        case 7:
+            post_video_bilibili(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
+                        start_days)
+        case 8:
+            post_video_baijiahao(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
+                        start_days)
     # 返回响应给客户端
     return jsonify(
         {
@@ -537,6 +547,26 @@ def postVideo():
             "data": None
         }), 200
 
+
+@app.route('/addAccount', methods=['POST'])
+def add_account():
+    data = request.get_json()
+    type = data.get('type')
+    filePath = data.get('filePath')
+    userName = data.get('userName')
+    status = data.get('status', 1)
+
+    try:
+        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO user_info (type, filePath, userName, status)
+                VALUES (?, ?, ?, ?)
+            ''', (type, filePath, userName, status))
+            conn.commit()
+        return jsonify({"code": 200, "msg": "Account added successfully"}), 200
+    except Exception as e:
+        return jsonify({"code": 500, "msg": str(e)}), 500
 
 @app.route('/updateUserinfo', methods=['POST'])
 def updateUserinfo():
@@ -613,6 +643,12 @@ def postVideoBatch():
             case 4:
                 post_video_ks(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
                           start_days)
+            case 7:
+                post_video_bilibili(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
+                            start_days)
+            case 8:
+                post_video_baijiahao(title, file_list, tags, account_list, category, enableTimer, videos_per_day, daily_times,
+                            start_days)
     # 返回响应给客户端
     return jsonify(
         {
@@ -743,7 +779,7 @@ def download_cookie():
 
 
 # 包装函数：在线程中运行异步函数
-def run_async_function(type,id,status_queue):
+def run_async_function(type,id,status_queue,username=None,password=None):
     match type:
         case '1':
             loop = asyncio.new_event_loop()
@@ -764,6 +800,16 @@ def run_async_function(type,id,status_queue):
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.run_until_complete(get_ks_cookie(id,status_queue))
+            loop.close()
+        case '7':
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(bilibili_cookie_gen(id, status_queue))
+            loop.close()
+        case '8':
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            loop.run_until_complete(baijiahao_cookie_gen(id, status_queue, username, password))
             loop.close()
 
 # SSE 流生成器函数
