@@ -11,10 +11,19 @@ RUN npm install
 ENV NODE_ENV=production
 ENV PATH=/app/node_modules/.bin:$PATH
 
-#   替换前端中的地址
-RUN sed -i 's#\${baseUrl}##g' /app/src/views/AccountManagement.vue
-RUN sed -i "s#\${import\.meta\.env\.VITE_API_BASE_URL || 'http:\/\/localhost:5409'}##g" /app/src/api/material.js
-RUN sed -i 's#localhost:5409##g' /app/.env.production
+# 动态设置 API 地址 - 支持环境变量
+ENV VITE_API_BASE_URL=${API_URL:-""}
+
+# 构建前端时替换 API 地址（多个文件）
+RUN if [ -n "$VITE_API_BASE_URL" ]; then \
+      sed -i "s#import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'#'${VITE_API_BASE_URL}'#g" /app/src/utils/request.js; \
+      sed -i "s#\${import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'}#${VITE_API_BASE_URL}#g" /app/src/api/material.js; \
+      sed -i "s#'http://localhost:5409'##g" /app/.env.production; \
+    else \
+      sed -i "s#import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'##g" /app/src/utils/request.js; \
+      sed -i "s#\${import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'}##g" /app/src/api/material.js; \
+      sed -i "s#localhost:5409##g" /app/.env.production; \
+    fi
 
 RUN npm run build
 
