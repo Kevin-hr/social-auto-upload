@@ -15,104 +15,115 @@ This skill provides a **proven, standardized workflow** for configuring and veri
 *   `scripts/get_*_cookie_auto.py`: Platform-specific login automations.
 *   `scripts/upload_*_simple.py`: Safe, isolated upload verifiers with auto-recovery.
 
+
+## 🧬 Self-Evolution System (Upgrade v2.1)
+
+> **"From Tool to Life"**
+
+This skill now includes a **Self-Evolution Engine** that tracks its own health and performance.
+
+### 🌟 Telemetry & Diagnostics
+Every time an upload script runs, it automatically logs its performance to `db/usage_log.json`.
+*   **Success Tracking**: Which platform has the highest failure rate?
+*   **Performance**: How long does an upload take on average?
+*   **Self-Healing**: (Future) Automatically optimizing selectors based on error patterns.
+
+### 📊 How to View Reports
+The project includes a built-in diagnostic tool.
+
+**View Basic Stats (Success Rate Table):**
+```bash
+python utils/usage_tracker.py --stats --days 30
+```
+
+**Export Report (JSON):**
+```bash
+python utils/usage_tracker.py --export
+```
+
+---
+
 ## 🚀 Proven Workflows (The "Golden Path")
 
-Follow these verified steps to replicate success.
-
 ### Phase 1: Environment Initialization
-**Goal**: prevent "File Not Found" and "DB Missing" errors.
+**Goal**: Deploy scripts + State Manager + Config.
 **Action**:
 ```bash
-python .claude/skills/social-auto-upload-setup/scripts/setup_environment.py
+python .gemini/antigravity/skills/social-auto-upload-setup/scripts/setup_environment.py
 ```
-**Outcome**: Ensures `conf.py` covers Chrome paths, and `cookiesFile/` exists for isolation.
+**Outcome**: Installs `conf.py` and `utils/state_manager.py` into your project.
 
-### Phase 2: Authentication & Cookie Capture
-**Goal**: Acquire persistent sessions without polluting the main browser profile.
+### Phase 2: Authentication (Same as before)
+Run `get_*_cookie_auto.py` to capture persistent sessions.
 
-#### 🎵 Douyin (抖音)
-1.  **Run**: `python .claude/skills/social-auto-upload-setup/scripts/get_douyin_cookie_auto.py`
-2.  **User Action**: Scan QR code with Douyin App.
-3.  **Result**: Cookie saved to `cookiesFile/douyin_uploader/account.json`.
+### Phase 3: Intelligent Batch Upload
+**Goal**: "Set and Forget" - Upload all videos in your folder.
 
-#### ⚡ Kuaishou (快手)
-1.  **Run**: `python .claude/skills/social-auto-upload-setup/scripts/get_ks_cookie_auto.py`
-2.  **User Action**: Scan QR code with Kuaishou App.
-3.  **Result**: Cookie saved to `cookiesFile/ks_uploader/account.json`.
-
-#### 💬 WeChat Channels (视频号)
-*This platform requires strict mobile confirmation.*
-1.  **Run**: `python .claude/skills/social-auto-upload-setup/scripts/get_tencent_cookie_auto.py`
-2.  **User Action**:
-    *   Browser opens `channels.weixin.qq.com`.
-    *   **CRITICAL**: Use **Mobile WeChat (手机微信)** to scan.
-    *   Confirm login on phone.
-3.  **Result**: Script detects URL change/avatar load and saves verified `account.json` to `cookiesFile/tencent_uploader/`.
-
-#### 🌸 Xiaohongshu (小红书)
-1.  **Run**: `python .claude/skills/social-auto-upload-setup/scripts/get_xhs_cookie_auto.py`
-2.  **User Action**: Scan QR code with Xiaohongshu App.
-3.  **Result**: Cookie saved to `cookiesFile/xhs_uploader/account.json`.
-
-### Phase 3: Validation & Upload Testing
-**Goal**: Confirm the pipeline works before attempting bulk tasks.
-**Auto-Recovery**: These scripts include a `ensure_metadata()` fix. If your video `test.mp4` lacks `test.txt`, the script **automatically generates it** to prevent immediate crashes.
-
-**Douyin**:
+**Usage**:
+Just run the script. It handles the rest.
 ```bash
-python .claude/skills/social-auto-upload-setup/scripts/upload_douyin_simple.py
-```
-
-**Kuaishou**:
-```bash
-python .claude/skills/social-auto-upload-setup/scripts/upload_ks_simple.py
-```
-
-**WeChat Channels**:
-```bash
-python .claude/skills/social-auto-upload-setup/scripts/upload_tencent_simple.py
-```
-
-**Xiaohongshu**:
-```bash
-python .claude/skills/social-auto-upload-setup/scripts/upload_xhs_simple.py
+python .gemini/antigravity/skills/social-auto-upload-setup/scripts/upload_douyin_simple.py
+python .gemini/antigravity/skills/social-auto-upload-setup/scripts/upload_xhs_simple.py
+python .gemini/antigravity/skills/social-auto-upload-setup/scripts/upload_ks_simple.py
+python .gemini/antigravity/skills/social-auto-upload-setup/scripts/upload_tencent_simple.py
 ```
 
 ---
 
 ## 🧠 Historical Experience & Engineering Notes
 
-These notes document "Why things are done this way" based on verified success.
+### 1. State Management (Anti-Fragility)
+*   **Problem**: Scripts used to be stateless. If you had 10 videos and it crashed on #5, you had to manually figure out where to resume.
+*   **Solution**: We implemented `UploadStateManager`. It checks `db/upload_state.db` before every action.
+*   **Benefit**: You can run the script every hour via cron/task scheduler. It will only upload *new* videos.
 
-### 1. The "Metadata Crash" Fix
-*   **Context**: The upstream `social-auto-upload` project crashes if `.txt` metadata files are missing.
-*   **Solution**: We do not strictly require users to create these manually for testing. The `upload_*_simple.py` wrappers in this skill perform a "Pre-flight Check".
-*   **Logic**: `if not txt_exists: create_default_txt(title=filename, tags=['#daily'])`.
-*   **Benefit**: Users can drop a raw `.mp4` into `videos/` and run the validater immediately.
+### 2. Selector Resilience (Xiaohongshu)
+*   **Context**: CSS selectors are fragile.
+*   **Solution**: The scripts now use "Fuzzy Logic" (e.g., detecting "Upload Success" text instead of relying on a specific div ID) and multiple fallback selectors for text input.
 
-### 2. Cookie Isolation Architecture
-*   **Context**: Default browser profiles often have stale sessions or conflicting extensions.
-*   **Solution**: This skill uses `playwright.chromium.launch(storage_state=specific_json)`.
-*   **Structure**:
-    *   `cookiesFile/douyin_uploader/account.json`
-    *   `cookiesFile/ks_uploader/account.json`
-    *   `cookiesFile/tencent_uploader/account.json`
-    *   `cookiesFile/xhs_uploader/account.json`
-*   **Benefit**: Zero cross-contamination between platforms.
+### 3. Absolute Paths
+*   **Learnings**: Relative paths (`./videos`) cause confusion when running scripts from other directories.
+*   **Standard**: We standardized on absolute paths (e.g., user's Video library) to ensure the source of truth is consistent across all tools.
 
-### 3. Platform-Specific Notes
-*   **WeChat Channels (视频号)**: ⭐⭐⭐⭐⭐ Proven.
-    *   **Login**: Requires active mobile WeChat confirmation.
-    *   **Originality**: The script attempts to handle "Original" declarations automatically if eligible, but manual intervention may be needed if the account has penalties.
-*   **Xiaohongshu (小红书)**: ⭐⭐⭐⭐ High capability, high fragility.
-    *   **Selectors**: site structure updates frequently. We implemented fallback selectors for description (`#post-textarea`, `div[contenteditable='true']`).
-    *   **Intervention**: May trigger captchas or "Agree to Terms" pop-ups during upload. Manual clicking in the headed browser is often required to proceed.
-*   **Login Timeout**: The `get_tencent_cookie_auto.py` script waits up to 300 seconds (5 mins) because WeChat mobile confirmation can sometimes be slow or require network switching.
+### 4. Douyin Direct Upload Workflow (2026-02-04)
+*   **Context**: Successfully uploaded video directly via Python without using simple wrapper scripts.
+*   **Key Steps**:
+    1. **Video Naming Convention**: Videos in `videos/` folder follow pattern `<filename>.mp4`
+    2. **Metadata File**: Paired `<filename>.txt` contains title (line 1) and hashtags (line 2)
+    3. **Cookie Location**: `cookiesFile/douyin_uploader/account.json`
+    4. **Quick Upload Command**:
+    ```bash
+    # Method 1: Using skill script (recommended)
+    cd .claude/skills/social-auto-upload-setup/scripts
+    python upload_douyin_simple.py
 
-### 4. Code Resilience
-*   **Experience**: Standard project code in `xhs_uploader` had obsolete selectors for the description box. We patched it to use a list of fallback selectors and added error handling to ensure the upload logic doesn't crash if optional fields (like tags) fail.
+    # Method 2: Direct Python execution
+    python -c "
+    import asyncio
+    from pathlib import Path
+    from uploader.douyin_uploader.main import douyin_setup, DouYinVideo
 
-### 5. Chrome Integration
-*   **Context**: Playwright needs a headful Chrome for QR scanning.
-*   **Solution**: `setup_environment.py` writes a `conf.py` pointing to `C:/Program Files/Google/Chrome/Application/chrome.exe`.
-*   **Verification**: Verified working on Windows 10/11 environments.
+    BASE_DIR = Path('C:/Users/52648/Documents/GitHub/social-auto-upload')
+    video_file = BASE_DIR / 'videos' / '456d0d86-8e79-42c7-ba67-f68711438fba.mp4'
+    account_file = BASE_DIR / 'cookiesFile' / 'douyin_uploader' / 'account.json'
+
+    title = '456d0d86-8e79-42c7-ba67-f68711438fba'
+    tags = ['日常', '分享']
+
+    cookie_ok = asyncio.run(douyin_setup(account_file, handle=False))
+    if cookie_ok:
+        app = DouYinVideo(title, video_file, tags, 0, account_file)
+        asyncio.run(app.main())
+    "
+    ```
+*   **Success Criteria**:
+    * `[+] Cookie 有效` - Cookie verification passed
+    * `[+] 成功进入version_2发布页面` - Page navigation successful
+    * `[+] 视频上传完毕` - Video upload completed
+    * `[+] 视频发布成功` - Publish confirmed
+
+### 5. Encoding Issue Workaround
+*   **Problem**: Windows GBK encoding causes `UnicodeEncodeError` with emoji/special chars
+*   **Solution**: Use ASCII characters in print statements, or run in proper encoding environment
+*   **Workaround**: The upload still succeeds despite the error message display issue
+
