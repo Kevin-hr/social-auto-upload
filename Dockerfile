@@ -20,9 +20,11 @@ RUN if [ -n "$VITE_API_BASE_URL" ]; then \
       sed -i "s#\${import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'}#${VITE_API_BASE_URL}#g" /app/src/api/material.js; \
       sed -i "s#'http://localhost:5409'##g" /app/.env.production; \
     else \
-      sed -i "s#import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'##g" /app/src/utils/request.js; \
-      sed -i "s#\${import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'}##g" /app/src/api/material.js; \
-      sed -i "s#localhost:5409##g" /app/.env.production; \
+      # Keep the default or use relative path. Fixing the syntax error 'baseURL: ,' by not deleting the code.
+      # We will just do nothing, or set it to '/' to avoid the syntax error.
+      sed -i "s#import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'#'/'#g" /app/src/utils/request.js; \
+      # Same for material.js if needed or just skip.
+      # sed -i "s#\${import\.meta\.env\.VITE_API_BASE_URL || 'http://localhost:5409'}##g" /app/src/api/material.js; \
     fi
 
 RUN npm run build
