@@ -1,18 +1,12 @@
 {
-  "$schema": "https://railway.app/schema.json",
-  "name": "social-auto-upload",
-  "description": "一键自动发布视频到多平台",
+  "$schema": "https://railway.app/configs/railway-v1.schema.json",
   "build": {
-    "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile"
+    "builder": "DOCKERFILE"
   },
   "deploy": {
     "startCommand": "python sau_backend.py",
-    "runAsRoot": true,
+    "restartPolicyType": "ON_FAILURE",
     "healthcheckPath": "/",
-    "healthcheckTimeout": 30
-  },
-  "env": {
-    "group": "production"
+    "healthcheckTimeout": 300
   }
 }
