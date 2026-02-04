@@ -3,6 +3,7 @@ import os
 import sqlite3
 import threading
 import time
+import traceback
 import uuid
 from pathlib import Path
 from queue import Queue
@@ -16,11 +17,44 @@ from myUtils.postVideo import post_video_tencent, post_video_DouYin, post_video_
 active_queues = {}
 app = Flask(__name__)
 
-#允许所有来源跨域访问
+# 允许所有来源跨域访问
 CORS(app)
 
 # 限制上传文件大小为160MB
 app.config['MAX_CONTENT_LENGTH'] = 160 * 1024 * 1024
+
+def init_db():
+    """初始化数据库表结构"""
+    db_path = Path(BASE_DIR / "db" / "database.db")
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.cursor()
+        # 创建账号记录表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_info (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type INTEGER NOT NULL,
+            filePath TEXT NOT NULL,
+            userName TEXT NOT NULL,
+            status INTEGER DEFAULT 0,
+            cookies TEXT
+        )
+        ''')
+        # 创建文件记录表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS file_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT NOT NULL,
+            filesize REAL,
+            upload_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            file_path TEXT
+        )
+        ''')
+        conn.commit()
+    print("✅ 数据库初始化完成")
+
+# 执行初始化
+init_db()
 
 # 获取当前目录（假设 index.html 和 assets 在这里）
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -248,12 +282,15 @@ def get_stats():
                 }
             }), 200
     except Exception as e:
+        print(f"Error in get_stats: {e}")
+        traceback.print_exc()
         return jsonify({"code": 500, "msg": str(e), "data": None}), 500
 
 
 @app.route("/getValidAccounts",methods=['GET'])
 async def getValidAccounts():
-    with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+    try:
+        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
         cursor = conn.cursor()
         cursor.execute('''
         SELECT * FROM user_info''')
@@ -281,6 +318,14 @@ async def getValidAccounts():
                             "msg": None,
                             "data": rows_list
                         }),200
+    except Exception as e:
+        print(f"Error in getValidAccounts: {e}")
+        traceback.print_exc()
+        return jsonify({
+            "code": 500,
+            "msg": f"getValidAccounts failed: {str(e)}",
+            "data": None
+        }), 500
 
 @app.route('/deleteFile', methods=['GET'])
 def delete_file():

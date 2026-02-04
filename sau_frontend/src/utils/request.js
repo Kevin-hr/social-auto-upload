@@ -29,7 +29,7 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response) => {
     const { data } = response
-    
+
     // 根据后端接口规范处理响应
     if (data.code === 200 || data.success) {
       return data
@@ -40,7 +40,7 @@ request.interceptors.response.use(
   },
   (error) => {
     console.error('响应错误:', error)
-    
+
     // 处理HTTP错误状态码
     if (error.response) {
       const { status } = error.response
@@ -56,7 +56,7 @@ request.interceptors.response.use(
           ElMessage.error('请求地址不存在')
           break
         case 500:
-          ElMessage.error('服务器内部错误')
+          ElMessage.error(error.response?.data?.msg || '服务器内部错误')
           break
         default:
           ElMessage.error('网络错误')
@@ -64,7 +64,7 @@ request.interceptors.response.use(
     } else {
       ElMessage.error('网络连接失败')
     }
-    
+
     return Promise.reject(error)
   }
 )
@@ -74,19 +74,19 @@ export const http = {
   get(url, params) {
     return request.get(url, { params })
   },
-  
+
   post(url, data, config = {}) {
     return request.post(url, data, config)
   },
-  
+
   put(url, data, config = {}) {
     return request.put(url, data, config)
   },
-  
+
   delete(url, params) {
     return request.delete(url, { params })
   },
-  
+
   upload(url, formData, onUploadProgress) {
     return request.post(url, formData, {
       headers: {
