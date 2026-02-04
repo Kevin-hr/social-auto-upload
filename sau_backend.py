@@ -27,7 +27,10 @@ def init_db():
     """初始化数据库表结构"""
     db_path = Path(BASE_DIR / "db" / "database.db")
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(db_path) as conn:
+    # Use a longer timeout and enable WAL mode for concurrency
+    with sqlite3.connect(db_path, timeout=30.0) as conn:
+        # Enable Write-Ahead Logging
+        conn.execute('PRAGMA journal_mode=WAL;')
         cursor = conn.cursor()
         # 创建账号记录表
         cursor.execute('''
@@ -158,7 +161,7 @@ def upload_save():
         # 保存文件
         file.save(filepath)
 
-        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db"), timeout=30.0) as conn:
             cursor = conn.cursor()
             cursor.execute('''
                                 INSERT INTO file_records (filename, filesize, file_path)
@@ -187,8 +190,8 @@ def upload_save():
 @app.route('/getFiles', methods=['GET'])
 def get_all_files():
     try:
-        # 使用 with 自动管理数据库连接
-        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+        # 使用 with 自动管理数据库连接, timeout=30.0
+        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db"), timeout=30.0) as conn:
             conn.row_factory = sqlite3.Row  # 允许通过列名访问结果
             cursor = conn.cursor()
 
@@ -228,7 +231,7 @@ def get_all_files():
 def getAccounts():
     """快速获取所有账号信息，不进行cookie验证"""
     try:
-        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db"), timeout=30.0) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             cursor.execute('''
@@ -254,7 +257,7 @@ def getAccounts():
 def get_stats():
     """获取仪表盘统计数据"""
     try:
-        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db"), timeout=30.0) as conn:
             cursor = conn.cursor()
             
             # 1. 账号总数
@@ -290,34 +293,34 @@ def get_stats():
 @app.route("/getValidAccounts",methods=['GET'])
 async def getValidAccounts():
     try:
-        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
-        cursor = conn.cursor()
-        cursor.execute('''
-        SELECT * FROM user_info''')
-        rows = cursor.fetchall()
-        rows_list = [list(row) for row in rows]
-        print("\n📋 当前数据表内容：")
-        for row in rows:
-            print(row)
-        for row in rows_list:
-            flag = await check_cookie(row[1],row[2])
-            if not flag:
-                row[4] = 0
-                cursor.execute('''
-                UPDATE user_info 
-                SET status = ? 
-                WHERE id = ?
-                ''', (0,row[0]))
-                conn.commit()
-                print("✅ 用户状态已更新")
-        for row in rows:
-            print(row)
-        return jsonify(
-                        {
-                            "code": 200,
-                            "msg": None,
-                            "data": rows_list
-                        }),200
+        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db"), timeout=30.0) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+            SELECT * FROM user_info''')
+            rows = cursor.fetchall()
+            rows_list = [list(row) for row in rows]
+            print("\n📋 当前数据表内容：")
+            for row in rows:
+                print(row)
+            for row in rows_list:
+                flag = await check_cookie(row[1],row[2])
+                if not flag:
+                    row[4] = 0
+                    cursor.execute('''
+                    UPDATE user_info 
+                    SET status = ? 
+                    WHERE id = ?
+                    ''', (0,row[0]))
+                    conn.commit()
+                    print("✅ 用户状态已更新")
+            for row in rows:
+                print(row)
+            return jsonify(
+                            {
+                                "code": 200,
+                                "msg": None,
+                                "data": rows_list
+                            }),200
     except Exception as e:
         print(f"Error in getValidAccounts: {e}")
         traceback.print_exc()
@@ -326,6 +329,38 @@ async def getValidAccounts():
             "msg": f"getValidAccounts failed: {str(e)}",
             "data": None
         }), 500
+
+@app.route('/debug/diagnose', methods=['GET'])
+def debug_diagnose():
+    """Returns system diagnostic information"""
+    info = {
+        "user": os.getenv("USER") or os.getenv("USERNAME"),
+        "cwd": os.getcwd(),
+        "db_path": str(Path(BASE_DIR / "db" / "database.db")),
+        "db_exists": Path(BASE_DIR / "db" / "database.db").exists(),
+        "db_size": os.path.getsize(Path(BASE_DIR / "db" / "database.db")) if Path(BASE_DIR / "db" / "database.db").exists() else 0,
+        "permissions": {
+            "write_db_dir": os.access(Path(BASE_DIR / "db"), os.W_OK),
+            "write_db_file": os.access(Path(BASE_DIR / "db" / "database.db"), os.W_OK) if Path(BASE_DIR / "db" / "database.db").exists() else False
+        }
+    }
+    
+    # Try a simple DB read
+    try:
+        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db"), timeout=5.0) as conn:
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA journal_mode;")
+            mode = cursor.fetchone()[0]
+            info["db_journal_mode"] = mode
+            
+            cursor.execute("SELECT count(*) FROM sqlite_master;")
+            table_count = cursor.fetchone()[0]
+            info["db_table_count"] = table_count
+            info["db_status"] = "OK"
+    except Exception as e:
+        info["db_status"] = f"ERROR: {str(e)}"
+        
+    return jsonify(info)
 
 @app.route('/deleteFile', methods=['GET'])
 def delete_file():
