@@ -1,63 +1,44 @@
 // ============================================
-// 极简纯净 - 浅色主题设计系统
-// Clean Modern Light Theme
+// Digital Brutalism Theme
+// "Raw Power" Design System
 // ============================================
 
 // ===== 色彩系统 =====
 
-// 主色调 - Apple 风格蓝
-$primary-start: #0071e3;
-$primary-end: #5e5ce6;
-$primary-gradient: linear-gradient(135deg, $primary-start 0%, $primary-end 100%);
+// 主色调 - 荧光黄绿 (Y2K 风格)
+$primary-color: #ccff00;
+$primary-hover: #b3e600;
+$primary-active: #99cc00;
 
-// 浅色背景系统
-$bg-lightest: #f8f8f8;
-$bg-light: #ffffff;
-$bg-card: rgba(255, 255, 255, 0.95);
-$bg-card-hover: rgba(255, 255, 255, 1);
-$bg-glass: rgba(255, 255, 255, 0.8);
+// 背景系统 - 极致暗黑
+$bg-darkest: #0a0a0a;
+$bg-dark: #111111;
+$bg-card: rgba(255, 255, 255, 0.03);
+$bg-card-hover: rgba(255, 255, 255, 0.06);
 
 // 文字颜色
-$text-primary: #1d1d1f;
-$text-secondary: #6e6e73;
-$text-tertiary: #86868b;
-$text-muted: #aeaeb2;
+$text-primary: #ffffff;
+$text-secondary: rgba(255, 255, 255, 0.6);
+$text-tertiary: rgba(255, 255, 255, 0.4);
 
-// 边框颜色
-$border-light: rgba(0, 0, 0, 0.08);
-$border-active: rgba(0, 113, 227, 0.3);
-
-// 发光效果 (浅色版)
-$glow-primary: 0 0 20px rgba(0, 113, 227, 0.15);
-$glow-cyan: 0 0 15px rgba(34, 211, 238, 0.2);
-$glow-success: 0 0 15px rgba(52, 199, 89, 0.2);
+// 边框 - 纯白粗线
+$border-width: 1px;
+$border-color: rgba(255, 255, 255, 0.2);
+$border-main: $border-width solid $border-color;
 
 // ===== 字体系统 =====
 
-// 标题字体 - SF Pro / Inter
-$font-display: 'SF Pro Display', 'Inter', -apple-system, sans-serif;
-
-// 正文字体
-$font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-
-// 等宽字体 - 用于数据和代码
-$font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+// 标题字体 - 硬核粗体
+$font-display: 'JetBrains Mono', 'Space Grotesk', monospace;
+$font-body: 'Inter', -apple-system, sans-serif;
+$font-mono: 'JetBrains Mono', monospace;
 
 // 字体大小
-$font-size-display: 48px;
-$font-size-h1: 32px;
-$font-size-h2: 24px;
-$font-size-h3: 20px;
+$font-size-h1: 64px;
+$font-size-h2: 48px;
+$font-size-h3: 24px;
 $font-size-body: 14px;
 $font-size-small: 12px;
-$font-size-tiny: 10px;
-
-// 字体粗细
-$font-weight-light: 300;
-$font-weight-regular: 400;
-$font-weight-medium: 500;
-$font-weight-semibold: 600;
-$font-weight-bold: 700;
 
 // ===== 间距系统 =====
 $spacing-xs: 4px;
@@ -68,45 +49,45 @@ $spacing-xl: 32px;
 $spacing-2xl: 48px;
 $spacing-3xl: 64px;
 
-// ===== 圆角系统 =====
-$radius-sm: 6px;
-$radius-md: 10px;
+// ===== 圆角 =====
+$radius-none: 0px;
+$radius-sm: 4px;
+$radius-md: 8px;
 $radius-lg: 16px;
-$radius-xl: 24px;
-$radius-full: 9999px;
 
-// ===== 阴影与光效 =====
-$shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.04);
-$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
-$shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
-$shadow-glow: 0 0 30px rgba(0, 113, 227, 0.1);
+// ===== 阴影 =====
+$shadow-glow: 0 0 40px rgba(204, 255, 0, 0.3);
+$shadow-block: 4px 4px 0px rgba(255, 255, 255, 0.1);
 
 // ===== 动画时长 =====
 $transition-fast: 150ms;
 $transition-normal: 300ms;
 $transition-slow: 500ms;
-$transition-slower: 800ms;
-
-// ===== 层级 =====
-$z-dropdown: 100;
-$z-sticky: 200;
-$z-fixed: 300;
-$z-modal-backdrop: 400;
-$z-modal: 500;
-$z-popover: 600;
-$z-tooltip: 700;
 
 // ===== 功能色 =====
-$success-color: #34c759;
-$warning-color: #ff9500;
-$danger-color: #ff3b30;
-$info-color: #5e5ce6;
+$success-color: #ccff00;
+$warning-color: #ffcc00;
+$danger-color: #ff3366;
+$info-color: #00ccff;
 
-// ===== 深色主题变量 =====
-$bg-darkest: #0a0a0f;
-$bg-dark: #111118;
-$bg-dark-card: rgba(17, 17, 24, 0.95);
-$text-primary-dark: #ffffff;
-$text-secondary-dark: rgba(255, 255, 255, 0.6);
-$text-tertiary-dark: rgba(255, 255, 255, 0.4);
-$border-dark: rgba(255, 255, 255, 0.08);
+// ===== 暗色模式变量 (默认) =====
+$bg-paper: $bg-darkest;
+$bg-white: $bg-dark;
+$bg-window: $bg-card;
+$bg-sidebar: $bg-dark;
+$text-primary-dark: $text-primary;
+$border-dark: $border-color;
+
+// ===== 兼容性别名 =====
+$bg-light: $bg-dark;
+$border-light: $border-main;
+$radius-xl: $radius-lg;
+$radius-full: 9999px;
+$primary-start: $primary-color;
+$primary-end: $primary-color;
+$font-weight-bold: 700;
+$font-weight-medium: 500;
+$shadow-md: $shadow-block;
+$transition-slow: 300ms;
+$shadow-sm: 2px 2px 0px rgba(255, 255, 255, 0.1);
+$shadow-lg: 8px 8px 0px rgba(255, 255, 255, 0.1);
