@@ -966,9 +966,10 @@ onBeforeUnmount(() => {
   }
   
   .account-tabs {
-    background-color: #fff;
-    border-radius: 4px;
-    box-shadow: $box-shadow-light;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     
     .account-tabs-nav {
       padding: 20px;
