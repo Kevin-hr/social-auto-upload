@@ -1,33 +1,18 @@
 <template>
-  <div id="app" :class="theme">
-    <!-- 背景效果 -->
+  <div id="app" class="posthog-app" :class="{ 'theme-dark': isDark }">
+    <!-- 全局网格背景 -->
     <div class="grid-background"></div>
+
+    <!-- 光晕效果 -->
     <div class="glow-orb glow-orb-1"></div>
     <div class="glow-orb glow-orb-2"></div>
 
-    <div class="app-container">
-      <!-- 侧边栏 -->
-      <aside class="sidebar" :class="{ collapsed: isCollapse }">
-        <div class="sidebar-header">
-          <div class="logo">
-            <div class="logo-icon">
-              <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M16 2L4 8v16l12 6 12-6V8L16 2z" stroke="url(#logo-grad)" stroke-width="2" fill="none"/>
-                <circle cx="16" cy="16" r="4" fill="url(#logo-grad)"/>
-                <path d="M16 26V32M26 20l-6-4M6 20l6-4" stroke="url(#logo-grad)" stroke-width="2" stroke-linecap="round"/>
-                <defs>
-                  <linearGradient id="logo-grad" x1="4" y1="4" x2="28" y2="28">
-                    <stop stop-color="#0071e3"/>
-                    <stop offset="1" stop-color="#5e5ce6"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-            <span v-show="!isCollapse" class="logo-text">
-              <span class="logo-title">指挥中心</span>
-              <span class="logo-subtitle">Social Auto</span>
-            </span>
-          </div>
+    <div class="app-layout">
+      <!-- 复古边栏 -->
+      <aside class="retro-sidebar" :class="{ collapsed: isCollapse }">
+        <div class="sidebar-header" @click="$router.push('/')">
+          <img src="@/assets/hedgehog.png" alt="Logo" class="sidebar-logo" />
+          <h2 v-show="!isCollapse" class="brand-name">SocialAuto</h2>
         </div>
 
         <nav class="sidebar-nav">
@@ -35,64 +20,67 @@
             v-for="item in menuItems"
             :key="item.path"
             :to="item.path"
-            class="nav-item"
+            class="nav-item-retro"
             :class="{ active: activeMenu === item.path }"
           >
-            <component :is="item.icon" class="nav-icon" />
+            <el-icon class="nav-icon"><component :is="item.icon" /></el-icon>
             <span v-show="!isCollapse" class="nav-text">{{ item.label }}</span>
-            <span v-if="!isCollapse && item.badge" class="nav-badge">{{ item.badge }}</span>
+            <span v-if="!isCollapse && item.badge" class="nav-badge-retro">{{ item.badge }}</span>
           </router-link>
         </nav>
 
         <div class="sidebar-footer">
-          <div class="system-status">
-            <div class="status-indicator online"></div>
-            <span v-show="!isCollapse" class="status-text">系统在线</span>
+          <!-- 主题切换按钮 -->
+          <button class="theme-toggle-btn" @click="toggleTheme" :title="isDark ? '切换到浅色模式' : '切换到深色模式'">
+            <span v-if="isDark" class="theme-icon">&#9728;</span>
+            <span v-else class="theme-icon">&#9790;</span>
+          </button>
+
+          <div class="user-card-retro retro-window" v-show="!isCollapse">
+            <div class="user-avatar-retro">Admin</div>
+            <div class="user-info">
+              <div class="username">Hedgehog Pro</div>
+              <div class="status-tag">Online</div>
+            </div>
           </div>
-          <div class="footer-actions">
-            <button class="theme-toggle-btn" @click="toggleTheme" :title="theme === 'light' ? '切换到深色模式' : '切换到浅色模式'">
-              <span v-if="theme === 'light'" class="theme-icon">🌙</span>
-              <span v-else class="theme-icon">☀️</span>
-            </button>
-            <button class="collapse-btn" @click="toggleSidebar">
-              <component :is="isCollapse ? 'Expand' : 'Fold'" />
-            </button>
+          
+          <!-- 个人微信二维码 -->
+          <div class="wechat-qr-retro retro-window" v-show="!isCollapse">
+             <div class="qr-title">扫码加微信</div>
+             <div class="qr-container">
+               <img src="@/assets/wechat-qr.png" alt="WeChat QR" class="wechat-img" />
+             </div>
+             <div class="qr-desc">获取更多支持</div>
           </div>
+          <button class="collapse-btn-retro" @click="isCollapse = !isCollapse">
+            <el-icon><Expand v-if="isCollapse" /><Fold v-else /></el-icon>
+          </button>
         </div>
       </aside>
 
       <!-- 主内容区 -->
-      <main class="main-content">
-        <!-- 顶部栏 -->
-        <header class="top-bar">
-          <div class="breadcrumb">
-            <span class="breadcrumb-item">{{ currentPageTitle }}</span>
+      <main class="main-content-retro">
+        <!-- 顶栏 -->
+        <header class="retro-header">
+          <div class="header-breadcrumb retro-window">
+            {{ currentPageTitle }}
           </div>
-          <div class="top-bar-actions">
-            <div class="time-display">
-              <span class="time-value">{{ currentTime }}</span>
-              <span class="time-label">服务器时间</span>
+
+          <div class="header-actions">
+            <div class="system-status-retro retro-window">
+              <span class="status-dot pulse"></span>
+              {{ currentTime }}
             </div>
-            <button class="action-btn" title="刷新数据">
-              <component :is="Refresh" />
+            <button class="action-btn-retro block-btn">
+              <el-icon><Bell /></el-icon>
             </button>
-            <button class="action-btn" title="通知">
-              <component :is="Bell" />
-              <span class="notification-dot"></span>
-            </button>
-            <div class="user-profile">
-              <div class="user-avatar">
-                <span>OP</span>
-              </div>
-              <span class="user-name">管理员</span>
-            </div>
           </div>
         </header>
 
-        <!-- 页面内容 -->
-        <div class="page-content">
+        <!-- 页面视图 -->
+        <div class="view-container">
           <router-view v-slot="{ Component }">
-            <transition name="fade" mode="out-in">
+            <transition name="fade-slide" mode="out-in">
               <component :is="Component" />
             </transition>
           </router-view>
@@ -106,51 +94,26 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import {
-  HomeFilled, User, Picture, Upload, Monitor, DataAnalysis,
-  Fold, Expand, Refresh, Bell
+  HomeFilled, User, Picture, Upload, Monitor,
+  Fold, Expand, Bell
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
 
-// 菜单项配置
-const menuItems = [
-  { path: '/', label: '仪表盘', icon: HomeFilled },
-  { path: '/account-management', label: '账号管理', icon: User, badge: 3 },
-  { path: '/material-management', label: '素材库', icon: Picture },
-  { path: '/publish-center', label: '发布中心', icon: Upload, badge: 5 },
-  { path: '/website', label: '监控面板', icon: Monitor },
-  { path: '/data', label: '数据分析', icon: DataAnalysis },
-]
-
-// 当前激活菜单
-const activeMenu = computed(() => route.path)
-
-// 当前页面标题
-const currentPageTitle = computed(() => {
-  const item = menuItems.find(m => m.path === route.path)
-  return item?.label || '仪表盘'
-})
-
-// 侧边栏折叠状态
+// ===== 侧边栏状态 =====
 const isCollapse = ref(false)
 
-const toggleSidebar = () => {
-  isCollapse.value = !isCollapse.value
-}
-
-// ===== 主题切换功能 =====
-const theme = ref('light')
-
+// ===== 主题系统 =====
+const isDark = ref(false)
 const toggleTheme = () => {
-  theme.value = theme.value === 'light' ? 'dark' : 'light'
-  localStorage.setItem('theme', theme.value)
-  document.documentElement.setAttribute('data-theme', theme.value)
+  isDark.value = !isDark.value
+  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
 }
 
-// 当前时间
+// ===== 时间系统 =====
 const currentTime = ref('')
-let timeInterval = null
-
+let timeTimer = null
 const updateTime = () => {
   const now = new Date()
   currentTime.value = now.toLocaleTimeString('zh-CN', {
@@ -161,528 +124,320 @@ const updateTime = () => {
   })
 }
 
+// ===== 菜单配置 =====
+const menuItems = [
+  { path: '/', label: '仪表盘', icon: HomeFilled },
+  { path: '/account-management', label: '账号管理', icon: User, badge: 3 },
+  { path: '/material-management', label: '素材库', icon: Picture },
+  { path: '/publish-center', label: '发布中心', icon: Upload, badge: 5 },
+  { path: '/about', label: '系统关于', icon: Monitor },
+]
+
+// ===== 计算属性 =====
+const activeMenu = computed(() => route.path)
+
+const currentPageTitle = computed(() => {
+  const item = menuItems.find(m => m.path === route.path)
+  return item?.label || '指挥中心'
+})
+
+// ===== 生命周期 =====
 onMounted(() => {
   // 恢复主题设置
   const savedTheme = localStorage.getItem('theme') || 'light'
-  theme.value = savedTheme
+  isDark.value = savedTheme === 'dark'
   document.documentElement.setAttribute('data-theme', savedTheme)
 
+  // 启动时钟
   updateTime()
-  timeInterval = setInterval(updateTime, 1000)
+  timeTimer = setInterval(updateTime, 1000)
 })
 
 onUnmounted(() => {
-  if (timeInterval) clearInterval(timeInterval)
+  if (timeTimer) clearInterval(timeTimer)
 })
 </script>
 
 <style lang="scss" scoped>
 @use '@/styles/variables.scss' as *;
 
-// ===== 侧边栏样式 =====
-.sidebar {
-  width: 260px;
-  background: $bg-light;
-  border-right: 1px solid $border-light;
+.posthog-app {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  transition: width $transition-normal ease, background 0.3s ease;
-  position: relative;
-  z-index: 10;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 1px;
-    height: 100%;
-    background: linear-gradient(180deg, transparent 0%, rgba(0, 113, 227, 0.2) 50%, transparent 100%);
-    opacity: 0;
-    transition: opacity $transition-normal;
-  }
-
-  &:hover::before {
-    opacity: 1;
-  }
-
-  &.collapsed {
-    width: 80px;
-
-    .logo {
-      padding: 0;
-      justify-content: center;
-    }
-
-    .nav-item {
-      justify-content: center;
-      padding: $spacing-md;
-
-      .nav-icon {
-        margin-right: 0;
-      }
-    }
-  }
+  transition: background-color 0.3s ease;
 }
 
-#app.dark .sidebar {
-  background: linear-gradient(180deg, rgba(17, 17, 24, 0.95) 0%, rgba(10, 10, 15, 0.98) 100%);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+// ===== 复古边栏 =====
+.retro-sidebar {
+  width: 260px;
+  background: $bg-sidebar;
+  border-right: $border-main;
+  display: flex;
+  flex-direction: column;
+  transition: width $transition-normal;
+  z-index: 100;
+  position: relative;
+
+  &.collapsed {
+    width: 64px;
+    .brand-name { display: none; }
+    .sidebar-footer { flex-direction: column; }
+  }
 }
 
 .sidebar-header {
   padding: $spacing-lg;
-  border-bottom: 1px solid $border-light;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  cursor: pointer;
+  border-bottom: $border-light;
+
+  .sidebar-logo {
+    width: 40px;
+    image-rendering: pixelated;
+  }
+
+  .brand-name {
+    font-family: $font-display;
+    font-size: 20px;
+    font-weight: 900;
+    margin: 0;
+  }
 }
 
-#app.dark .sidebar-header {
-  border-bottom-color: rgba(255, 255, 255, 0.08);
+.sidebar-nav {
+  flex: 1;
+  padding: $spacing-md;
 }
 
-.logo {
+.nav-item-retro {
+  display: flex;
+  align-items: center;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-sm;
+  color: $text-primary;
+  text-decoration: none;
+  font-weight: bold;
+  border: 1px solid transparent;
+  transition: all $transition-fast;
+
+  .nav-icon {
+    font-size: 20px;
+    margin-right: $spacing-md;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.05);
+    border: $border-light;
+    transform: translateX(2px);
+  }
+
+  &.active {
+    background: $primary-color;
+    border: $border-main;
+    box-shadow: $shadow-block-sm;
+    transform: translateX(4px);
+  }
+}
+
+.nav-badge-retro {
+  margin-left: auto;
+  background: #000;
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 6px;
+  font-family: $font-mono;
+}
+
+.sidebar-footer {
+  padding: $spacing-md;
+  border-top: $border-light;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.theme-toggle-btn {
+  width: 100%;
+  padding: $spacing-sm;
+  background: transparent;
+  border: $border-light;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $primary-color;
+    border: $border-main;
+  }
+
+  .theme-icon {
+    display: block;
+    text-align: center;
+  }
+}
+
+.user-card-retro {
+  padding: $spacing-sm;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+
+  .user-avatar-retro {
+    width: 32px;
+    height: 32px;
+    background: #000;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+  }
+
+  .username {
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .status-tag {
+    font-size: 10px;
+    color: $success-color;
+  }
+}
+
+.wechat-qr-retro {
+  padding: $spacing-sm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: $spacing-sm;
+  background: white !important; /* QR码需要白底 */
+  
+  .qr-title {
+    font-size: 10px;
+    font-weight: bold;
+    color: #000;
+  }
+
+  .qr-container {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    .wechat-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: auto; /* 保持图片清晰 */
+    }
+  }
+
+  .qr-desc {
+    font-size: 10px;
+    color: #666;
+  }
+}
+
+.collapse-btn-retro {
+  width: 100%;
+  padding: $spacing-xs;
+  background: transparent;
+  border: $border-light;
+  cursor: pointer;
+
+  &:hover {
+    background: $primary-color;
+    border: $border-main;
+  }
+}
+
+// ===== 主内容区 =====
+.main-content-retro {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-lg;
+  min-width: 0;
+}
+
+.retro-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xl;
+  height: auto;
+  padding: 0;
+}
+
+.header-breadcrumb {
+  padding: $spacing-sm $spacing-xl;
+  font-family: $font-display;
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.header-actions {
   display: flex;
   align-items: center;
   gap: $spacing-md;
 }
 
-.logo-icon {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-
-  svg {
-    width: 100%;
-    height: 100%;
-  }
-}
-
-.logo-text {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.logo-title {
-  font-family: $font-display;
-  font-size: 16px;
-  font-weight: $font-weight-bold;
-  color: $text-primary;
-  letter-spacing: 0.05em;
-}
-
-.logo-subtitle {
-  font-size: 10px;
-  color: $text-tertiary;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-}
-
-#app.dark .logo-subtitle {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-// ===== 导航菜单 =====
-.sidebar-nav {
-  flex: 1;
-  padding: $spacing-md;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xs;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  padding: $spacing-md $spacing-lg;
-  border-radius: $radius-md;
-  color: $text-secondary;
-  text-decoration: none;
-  transition: all $transition-fast;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 0;
-    background: $primary-gradient;
-    border-radius: 0 3px 3px 0;
-    transition: height $transition-fast;
-  }
-
-  &:hover {
-    color: $text-primary;
-    background: rgba(0, 0, 0, 0.03);
-
-    &::before {
-      height: 20px;
-    }
-  }
-
-  &.active {
-    color: $text-primary;
-    background: linear-gradient(90deg, rgba(0, 113, 227, 0.08) 0%, transparent 100%);
-
-    &::before {
-      height: 24px;
-    }
-
-    .nav-icon {
-      color: $primary-start;
-    }
-  }
-}
-
-#app.dark .nav-item {
-  &:hover {
-    background: rgba(255, 255, 255, 0.06);
-  }
-
-  &.active {
-    background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, transparent 100%);
-
-    .nav-icon {
-      color: $primary-start;
-      filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
-    }
-  }
-}
-
-.nav-icon {
-  width: 20px;
-  height: 20px;
-  margin-right: $spacing-md;
-  transition: all $transition-fast;
-}
-
-.nav-text {
-  font-size: 14px;
-  font-weight: $font-weight-medium;
-  white-space: nowrap;
-}
-
-.nav-badge {
-  margin-left: auto;
-  padding: 2px 8px;
-  background: linear-gradient(135deg, $primary-start, $primary-end);
-  border-radius: $radius-full;
-  font-size: 10px;
-  font-weight: $font-weight-bold;
-  color: white;
-}
-
-// ===== 侧边栏底部 =====
-.sidebar-footer {
-  padding: $spacing-md $spacing-lg;
-  border-top: 1px solid $border-light;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-#app.dark .sidebar-footer {
-  border-top-color: rgba(255, 255, 255, 0.08);
-}
-
-.system-status {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-}
-
-.status-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: $text-tertiary;
-
-  &.online {
-    background: $success-color;
-    box-shadow: 0 0 8px rgba(52, 199, 89, 0.4);
-    animation: pulse 2s ease-in-out infinite;
-  }
-}
-
-.status-text {
-  font-size: 12px;
-  color: $text-tertiary;
-}
-
-#app.dark .status-text {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.footer-actions {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-}
-
-.theme-toggle-btn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: $radius-sm;
-  background: rgba(0, 0, 0, 0.03);
-  border: 1px solid $border-light;
-  color: $text-secondary;
-  transition: all $transition-fast;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.06);
-    color: $text-primary;
-  }
-}
-
-#app.dark .theme-toggle-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.08);
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-}
-
-.theme-icon {
-  font-size: 14px;
-}
-
-.collapse-btn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: $radius-sm;
-  color: $text-tertiary;
-  transition: all $transition-fast;
-
-  &:hover {
-    color: $text-primary;
-    background: rgba(0, 0, 0, 0.05);
-  }
-}
-
-#app.dark .collapse-btn {
-  &:hover {
-    background: rgba(255, 255, 255, 0.06);
-  }
-}
-
-// ===== 主内容区 =====
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  position: relative;
-}
-
-.top-bar {
-  height: 64px;
-  padding: 0 $spacing-xl;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: $bg-light;
-  border-bottom: 1px solid $border-light;
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  transition: background 0.3s ease, border-color 0.3s ease;
-}
-
-#app.dark .top-bar {
-  background: rgba(17, 17, 24, 0.8);
-  border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-}
-
-.breadcrumb-item {
-  font-size: 16px;
-  font-weight: $font-weight-medium;
-  color: $text-primary;
-}
-
-.top-bar-actions {
-  display: flex;
-  align-items: center;
-  gap: $spacing-lg;
-}
-
-.time-display {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  padding: $spacing-xs $spacing-md;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: $radius-md;
-  border: 1px solid $border-light;
-}
-
-#app.dark .time-display {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.time-value {
+.system-status-retro {
+  padding: $spacing-sm $spacing-md;
   font-family: $font-mono;
   font-size: 14px;
-  font-weight: $font-weight-medium;
-  color: $primary-start;
-}
-
-.time-label {
-  font-size: 10px;
-  color: $text-tertiary;
-}
-
-#app.dark .time-label {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.action-btn {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: $radius-md;
-  color: $text-secondary;
-  transition: all $transition-fast;
-  position: relative;
-
-  &:hover {
-    color: $text-primary;
-    background: rgba(0, 0, 0, 0.03);
-  }
-}
-
-#app.dark .action-btn {
-  &:hover {
-    background: rgba(255, 255, 255, 0.06);
-  }
-}
-
-.notification-dot {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  background: $danger-color;
-  border-radius: 50%;
-}
-
-.user-profile {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
-  padding: $spacing-xs $spacing-md;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: $radius-md;
-  border: 1px solid $border-light;
-  cursor: pointer;
-  transition: all $transition-fast;
+}
 
-  &:hover {
-    background: rgba(0, 0, 0, 0.04);
-    border-color: rgba(0, 0, 0, 0.12);
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: $success-color;
+  border: 1px solid #000;
+
+  &.pulse {
+    animation: pulse 2s infinite;
   }
 }
 
-#app.dark .user-profile {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.08);
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.15);
-  }
-}
-
-.user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: $radius-sm;
-  background: linear-gradient(135deg, $primary-start, $primary-end);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: $font-weight-bold;
-  color: white;
-}
-
-.user-name {
-  font-size: 14px;
-  font-weight: $font-weight-medium;
-  color: $text-primary;
-}
-
-.page-content {
+.view-container {
   flex: 1;
-  padding: $spacing-xl;
-  overflow-y: auto;
+  position: relative;
 }
 
-// 过渡动画
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
+// ===== 动画 =====
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    transform: translateX(-100%);
-
-    &.collapsed {
-      transform: translateX(-100%);
-    }
-  }
-
-  .top-bar-actions .user-name {
-    display: none;
-  }
-}
-</style>
-
-<!-- 全局主题样式 -->
-<style lang="scss">
-@use '@/styles/variables.scss' as *;
-
-#app {
-  min-height: 100vh;
-  background: $bg-lightest;
-  transition: background-color 0.3s ease;
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.2s ease;
 }
 
-#app.dark {
-  background: $bg-darkest;
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>
