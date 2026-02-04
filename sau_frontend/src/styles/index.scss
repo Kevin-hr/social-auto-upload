@@ -2,10 +2,34 @@
 @use './variables.scss' as *;
 
 /* ============================================
-   全局样式 - 极简纯净浅色版
+   PostHog Inspired Retro-OS Design System
    ============================================ */
 
-// 极简网格背景（浅色）
+body {
+  background-color: $bg-paper;
+  color: $text-primary;
+  font-family: $font-body;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow-x: hidden;
+
+  // 纸张纹理叠加
+  &::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('@/assets/paper-texture.png');
+    background-repeat: repeat;
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 9999;
+  }
+}
+
+// 经典的 PostHog 网格背景
 .grid-background {
   position: fixed;
   top: 0;
@@ -13,48 +37,140 @@
   width: 100%;
   height: 100%;
   background-image:
-    linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
-  background-size: 50px 50px;
+    linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
   pointer-events: none;
   z-index: 0;
 }
 
-// 光晕效果（浅色版 - 更柔和）
+// 光晕效果
 .glow-orb {
   position: fixed;
-  width: 600px;
-  height: 600px;
+  width: 400px;
+  height: 400px;
   border-radius: 50%;
-  filter: blur(120px);
+  filter: blur(100px);
   pointer-events: none;
   z-index: 0;
+  opacity: 0.5;
+  animation: float 20s ease-in-out infinite;
+}
 
-  &.glow-orb-1 {
-    top: -200px;
-    right: -200px;
-    background: radial-gradient(circle, rgba(0, 113, 227, 0.08) 0%, transparent 70%);
-    animation: float 20s ease-in-out infinite;
-  }
+.glow-orb-1 {
+  top: -100px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(255, 196, 0, 0.6) 0%, transparent 70%);
+}
 
-  &.glow-orb-2 {
-    bottom: -200px;
-    left: -200px;
-    background: radial-gradient(circle, rgba(94, 92, 230, 0.06) 0%, transparent 70%);
-    animation: float 25s ease-in-out infinite reverse;
-  }
+.glow-orb-2 {
+  bottom: -150px;
+  left: -150px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
+  animation-delay: -10s;
 }
 
 @keyframes float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -30px) scale(1.05); }
-  66% { transform: translate(-20px, 20px) scale(0.95); }
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, 30px) scale(1.1);
+  }
+  50% {
+    transform: translate(-20px, 50px) scale(0.9);
+  }
+  75% {
+    transform: translate(50px, -30px) scale(1.05);
+  }
 }
 
-// 基础过渡
+// 深色主题
+.theme-dark {
+  body {
+    background-color: $bg-dark-paper;
+    color: $text-dark-primary;
+
+    &::before {
+      opacity: 0.05;
+    }
+  }
+
+  .grid-background {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+
+  .retro-sidebar {
+    background: $bg-dark-paper;
+    border-color: $border-dark;
+  }
+
+  .retro-window {
+    background: $bg-dark-window;
+    border-color: $border-dark;
+    box-shadow: $shadow-block-dark;
+  }
+
+  .nav-item-retro {
+    color: $text-dark-primary;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: $border-dark;
+    }
+
+    &.active {
+      background: $primary-color;
+      border-color: $border-dark;
+      color: #000;
+    }
+  }
+
+  .nav-badge-retro {
+    background: $border-dark;
+    color: #000;
+  }
+
+  .user-avatar-retro {
+    background: $border-dark !important;
+    color: #000 !important;
+  }
+
+  .header-breadcrumb {
+    color: $text-dark-primary;
+  }
+
+  .sidebar-header,
+  .sidebar-footer,
+  .collapse-btn-retro,
+  .theme-toggle-btn {
+    border-color: $border-dark;
+  }
+
+  .block-btn {
+    background: $bg-dark-window;
+    border-color: $border-dark;
+    box-shadow: $shadow-block-dark;
+    color: $text-dark-primary;
+
+    &:hover {
+      background: $primary-color;
+      border-color: #000;
+    }
+  }
+
+  .status-dot {
+    background: $success-color;
+    border-color: $border-dark;
+  }
+}
+
+// 基础过渡 (更利落)
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity $transition-normal ease;
+  transition: opacity $transition-fast ease;
 }
 
 .fade-enter-from,
@@ -62,17 +178,7 @@
   opacity: 0;
 }
 
-// 滑入效果
-.slide-up-enter-active {
-  transition: all $transition-slow ease-out;
-}
-
-.slide-up-enter-from {
-  opacity: 0;
-  transform: translateY(30px);
-}
-
-// 实用工具类
+// 实用工具类 - 复古加粗
 .flex-center {
   display: flex;
   justify-content: center;
@@ -98,129 +204,138 @@
   height: 100%;
 }
 
-// 间距
-@each $name, $value in (xs: 4px, sm: 8px, md: 16px, lg: 24px, xl: 32px, 2xl: 48px) {
-  .m-#{ $name } { margin: $value; }
-  .mt-#{ $name } { margin-top: $value; }
-  .mr-#{ $name } { margin-right: $value; }
-  .mb-#{ $name } { margin-bottom: $value; }
-  .ml-#{ $name } { margin-left: $value; }
-  .p-#{ $name } { padding: $value; }
-  .pt-#{ $name } { padding-top: $value; }
-  .pr-#{ $name } { padding-right: $value; }
-  .pb-#{ $name } { padding-bottom: $value; }
-  .pl-#{ $name } { padding-left: $value; }
-}
-
-// 浅色卡片
-.light-card {
-  background: $bg-card;
-  backdrop-filter: blur(20px);
-  border: 1px solid $border-light;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-sm;
+// 经典 PostHog 窗口/卡片
+.retro-window {
+  background: $bg-window;
+  border: $border-main;
+  box-shadow: $shadow-block-md;
+  transition: all $transition-fast;
 
   &:hover {
-    background: $bg-card-hover;
-    box-shadow: $shadow-md;
+    transform: translate(-2px, -2px);
+    box-shadow: $shadow-block-lg;
   }
 }
 
-// 渐变文字
-.gradient-text {
-  background: $primary-gradient;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+// 块状按钮
+.block-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-sm $spacing-lg;
+  background: $bg-white;
+  border: $border-main;
+  box-shadow: $shadow-block-sm;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  transition: all $transition-fast;
 
-// 发光边框
-.glow-border {
-  border: 1px solid $border-active;
-  box-shadow: $glow-primary;
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: $shadow-block-md;
+    background: $primary-color;
+  }
+
+  &:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 $border-color;
+  }
 }
 
 // 等宽数字
 .mono-numbers {
   font-family: $font-mono;
-  letter-spacing: -0.02em;
+  font-weight: bold;
 }
 
-// Element Plus 浅色覆盖样式
+// Element Plus 复古化覆盖
 .el-card {
-  --el-card-bg-color: #{$bg-card};
-  --el-card-border-color: #{$border-light};
-  border-radius: $radius-lg;
-  box-shadow: $shadow-sm;
+  --el-card-bg-color: #{$bg-window};
+  --el-card-border-color: #{$border-color};
+  border: $border-main !important;
+  border-radius: $radius-none !important;
+  box-shadow: $shadow-block-sm !important;
 }
 
 .el-button--primary {
-  --el-button-bg-color: #{$primary-start};
-  --el-button-border-color: #{$primary-start};
-  --el-button-hover-bg-color: #{$primary-end};
-  --el-button-hover-border-color: #{$primary-end};
+  --el-button-bg-color: #{$primary-color} !important;
+  --el-button-border-color: #{$border-color} !important;
+  --el-button-text-color: #{$text-primary} !important;
+  --el-button-hover-bg-color: #{$primary-hover} !important;
+  --el-button-active-bg-color: #{$primary-active} !important;
+  border-width: $border-width !important;
+  font-weight: bold !important;
+  border-radius: $radius-none !important;
+  box-shadow: $shadow-block-sm;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: $shadow-block-md;
+  }
+
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: none;
+  }
 }
 
 .el-menu {
-  --el-menu-bg-color: transparent;
-  --el-menu-text-color: #{$text-secondary};
-  --el-menu-active-color: #{$text-primary};
-  --el-menu-hover-bg-color: rgba(0, 0, 0, 0.04);
-  --el-menu-hover-text-color: #{$text-primary};
-}
+  border-right: none !important;
+  background: transparent !important;
 
-.el-table {
-  --el-table-bg-color: transparent;
-  --el-table-tr-bg-color: transparent;
-  --el-table-header-bg-color: rgba(0, 0, 0, 0.02);
-  --el-table-row-hover-bg-color: rgba(0, 0, 0, 0.02);
-  --el-table-border-color: #{$border-light};
-  --el-table-text-color: #{$text-primary};
-  --el-table-header-text-color: #{$text-secondary};
-}
+  .el-menu-item {
+    font-weight: bold;
+    border: $border-light;
+    margin-bottom: $spacing-sm;
+    transition: all $transition-fast;
 
-.el-tag {
-  border: none;
-  border-radius: $radius-sm;
+    &:hover,
+    &.is-active {
+      background: $primary-color !important;
+      color: $text-primary !important;
+      border: $border-main;
+      transform: translateX(4px);
+    }
+  }
 }
 
 .el-input__wrapper {
-  background: $bg-card;
-  border: 1px solid $border-light;
-  box-shadow: none;
-
-  &:hover {
-    border-color: rgba(0, 0, 0, 0.2);
-  }
+  background: $bg-white !important;
+  border: $border-main !important;
+  box-shadow: none !important;
+  border-radius: $radius-none !important;
 
   &.is-focus {
-    border-color: $primary-start;
-    box-shadow: 0 0 0 1px $primary-start;
+    background: #fffbe6 !important;
   }
-}
-
-.el-select-dropdown {
-  background: $bg-light;
-  border: 1px solid $border-light;
 }
 
 .el-dialog {
-  --el-dialog-bg-color: #{$bg-light};
-  --el-dialog-border-radius: #{$radius-xl};
-  border: 1px solid $border-light;
+  border: $border-main !important;
+  border-radius: $radius-none !important;
+  box-shadow: $shadow-block-lg !important;
+  background: $bg-paper !important;
 }
 
-.el-message-box {
-  --el-messagebox-title-color: #{$text-primary};
-  --el-messagebox-content-color: #{$text-secondary};
-  --el-messagebox-bg-color: #{$bg-light};
-  background: $bg-light;
-  border: 1px solid $border-light;
+.el-table {
+  border: $border-main !important;
+
+  th.el-table__cell {
+    background-color: $bg-sidebar !important;
+    color: $text-primary !important;
+    font-weight: bold !important;
+    border-bottom: $border-main !important;
+  }
+
+  td.el-table__cell {
+    border-bottom: $border-light !important;
+  }
 }
 
-.el-notification {
-  --el-notification-title-color: #{$text-primary};
-  --el-notification-content-color: #{$text-secondary};
-  background: $bg-light;
-  border: 1px solid $border-light;
+.el-tag {
+  border: $border-light !important;
+  border-radius: $radius-none !important;
+  font-weight: bold;
+  color: $text-primary !important;
 }
