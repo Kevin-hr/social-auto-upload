@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  /* PostHog Light Theme */
+  --background: #eeefe9;
+  --foreground: #1d1f25;
+  --accent-orange: #f54e00;
+  --accent-blue: #366dd9;
+  --border-color: #dadbd2;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-ibm-plex);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-ibm-plex), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* PostHog Utility Classes */
+.ph-button {
+  @apply inline-flex items-center justify-center px-6 py-3 text-sm font-bold transition-all duration-200 border-b-4 border-r-4 border-black rounded-lg active:border-b-0 active:border-r-0 active:translate-y-1 active:translate-x-1;
+}
+
+.ph-button-primary {
+  @apply bg-[#f54e00] text-white hover:bg-[#d44000];
+}
+
+.ph-button-secondary {
+  @apply bg-white text-black hover:bg-gray-50;
+}
+
+.ph-card {
+  @apply bg-[#f9f9f9] border border-[#dadbd2] rounded-xl p-6 transition-all hover:border-black/30;
+}
+
