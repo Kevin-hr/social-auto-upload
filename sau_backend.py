@@ -202,10 +202,6 @@ def getAccounts():
             rows = cursor.fetchall()
             rows_list = [list(row) for row in rows]
 
-            print("\n📋 当前数据表内容（快速获取）：")
-            for row in rows:
-                print(row)
-
             return jsonify(
                 {
                     "code": 200,
@@ -219,6 +215,40 @@ def getAccounts():
             "msg": f"获取账号列表失败: {str(e)}",
             "data": None
         }), 500
+
+@app.route("/getStats", methods=['GET'])
+def get_stats():
+    """获取仪表盘统计数据"""
+    try:
+        with sqlite3.connect(Path(BASE_DIR / "db" / "database.db")) as conn:
+            cursor = conn.cursor()
+            
+            # 1. 账号总数
+            cursor.execute("SELECT COUNT(*) FROM user_info")
+            account_count = cursor.fetchone()[0]
+            
+            # 2. 素材总数
+            cursor.execute("SELECT COUNT(*) FROM file_records")
+            file_count = cursor.fetchone()[0]
+            
+            # 3. 各平台账号分布
+            cursor.execute("SELECT type, COUNT(*) FROM user_info GROUP BY type")
+            platform_rows = cursor.fetchall()
+            platform_counts = {str(r[0]): r[1] for r in platform_rows}
+
+            return jsonify({
+                "code": 200,
+                "msg": "success",
+                "data": {
+                    "accounts": account_count,
+                    "files": file_count,
+                    "platforms": platform_counts,
+                    "today_publish": 0, # 这里的发布统计需要看日志表，暂时写死
+                    "pending_tasks": 0
+                }
+            }), 200
+    except Exception as e:
+        return jsonify({"code": 500, "msg": str(e), "data": None}), 500
 
 
 @app.route("/getValidAccounts",methods=['GET'])
